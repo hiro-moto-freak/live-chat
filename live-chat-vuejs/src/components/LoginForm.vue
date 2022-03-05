@@ -23,6 +23,7 @@
 <script>
 import axios from "axios";
 export default {
+  emits: ["redirectToChatRoom"],
   data() {
     return {
       email: "",
@@ -39,12 +40,16 @@ export default {
           email: this.email,
           password: this.password,
         });
+
         if (!res) {
           throw new Error("メールアドレスかパスワードが違います");
         }
 
-        console.log({ res });
+        if (!this.error) {
+          this.$emit("redirectToChatRoom");
+        }
 
+        console.log({ res });
         return res;
       } catch (error) {
         console.log({ error });
