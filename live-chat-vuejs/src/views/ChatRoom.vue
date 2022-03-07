@@ -2,7 +2,7 @@
   <div class="container">
     <NavBar />
     <ChatWindow :messages="messages" />
-    <NewChatForm />
+    <NewChatForm @connectCable="connectCable" />
   </div>
 </template>
 
@@ -12,6 +12,7 @@ import ChatWindow from "../components/ChatWindow.vue";
 import NewChatForm from "../components/NewChatForm.vue";
 
 import axios from "axios";
+import ActionCable from "actioncable";
 
 export default {
   components: { NavBar, ChatWindow, NewChatForm },
@@ -38,9 +39,27 @@ export default {
         console.log(err);
       }
     },
+    connectCable(message) {
+      this.messageChannel.perform("receive", {
+        message: message,
+        email: window.localStorage.getItem("uid"),
+      });
+    },
   },
   mounted() {
-    this.getMessages();
+    const cable = ActionCable.createConsumer("ws://localhost:3000/cable");
+    this.messageChannel = cable.subscriptions.create("RoomChannel", {
+      connected: () => {
+        this.getMessages();
+      },
+      received: () => {
+        this.getMessages();
+      },
+    });
+  },
+
+  beforeUnmount() {
+    this.messageChannel.unsubscribe();
   },
 };
 </script>
